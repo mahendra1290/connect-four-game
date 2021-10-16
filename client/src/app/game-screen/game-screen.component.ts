@@ -21,18 +21,20 @@ export class GameScreenComponent implements OnInit {
 
   ngOnInit(): void {
     this.gameService.room.subscribe(room => {
-      if (room == null) {
-        if (this.gameService.isConnected()) {
-          this.showMessage();
-          setTimeout(() => {
-            this.navigateToStart();
-          }, 2000);
-        } else {
-          this.navigateToStart();
-        }
-      }
+
       this.room = room;
-      this.opponent = this.room?.players.find(player => player.username != this.username)
+      this.opponent = { username: 'null', socketId: 'socke3' }
+      // this.opponent = this.room?.players.find(player => player.username != this.username)
+    })
+    this.gameService.roomLeave.subscribe(reason => {
+      if (reason == 'user-left') {
+        this.showMessage();
+        setTimeout(() => {
+          this.navigateToStart();
+        }, 2000);
+      } else {
+        this.navigateToStart();
+      }
     })
     this.gameService.optionSelected.subscribe(val => {
       if (val.socketId == this.opponent?.socketId) {

@@ -7,6 +7,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { RedisSessionStorage, Session } from "./sessionStore";
 import { nanoid } from "nanoid";
+import { RoomManager } from "./roomManager";
 
 
 dotenv.config();
@@ -27,6 +28,22 @@ const io = new Server(httpServer, {
 const redis = new Redis();
 
 const sessionStore = new RedisSessionStorage(redis);
+
+const roomManager = new RoomManager(redis);
+
+redis.on("room:created", async (data) => {
+  const room = data.roomId;
+  const session1 = await sessionStore.findSession(data.player1);
+  const session2 = await sessionStore.findSession(data.player2);
+
+  const sockets = (await io.fetchSockets()).filter(sock => sock.id == session1?.userId || sock.id == session2?.userId);
+  for (const sock of sockets) {
+    sock.join(room)
+  }
+  console.log("room joined", room);
+
+  io.to(room).emit('room:created', data);
+})
 
 io.use(async (socket, next) => {
   const username = socket.handshake.auth.username;
@@ -49,8 +66,39 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log("user connected with", socket.id);
-  sessionStore.saveSession({ sessionId: socket.sessionId, username: socket.username, userId: socket.userId, connected: true })
+
+  socket.on('disconnect', () => {
+    console.log("disconendte");
+
+  })
+
+  sessionStore.saveSession({ sessionId: socket.sessionId, username: socket.username, userId: socket.id, connected: true })
   socket.emit("session", { sessionId: socket.sessionId, userId: socket.id });
+
+  socket.on('disconnecting', async () => {
+    console.log("discoonet");
+
+    const session = await sessionStore.findSession(socket.sessionId);
+    console.log(session);
+    roomManager.findRoom(session?.sessionId || '');
+    if (session) {
+      session.connected = false;
+      sessionStore.saveSession(session);
+      roomManager.removePlayer(session.sessionId);
+
+      const room = await roomManager.findRoom(session.sessionId);
+      console.log("rroms ", room, session.userId);
+
+      if (room) {
+        console.log("room", room.roomId);
+
+        io.to(room.roomId).emit('room:userleft', "user left")
+      }
+
+    }
+  })
+
+  roomManager.addPlayer(socket.sessionId);
   //   socket.on("button pressed", (data) => {
   //     console.log("room-message", data);
   //     io.to(data["room"]).emit("option selected", { value: data["value"], socketId: socket.id });

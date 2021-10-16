@@ -31,11 +31,10 @@ export class RedisSessionStorage implements SessionStore {
       });
   }
 
-
   saveSession(session: Session): void {
     this.redisClient
       .multi()
-      .hmset(`session:${session.sessionId}`, "username", session.username, "userId", session.userId)
+      .hmset(`session:${session.sessionId}`, "username", session.username, "userId", session.userId, "connected", session.connected.toString())
       .expire(`session:${session.sessionId}`, this.SESSION_TTL)
       .exec()
       .then(result => console.log(result))

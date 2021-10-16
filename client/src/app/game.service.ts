@@ -37,18 +37,25 @@ export class GameService {
 
   gameMove: Subject<{ from: string, value: number }> = new Subject();
 
+  roomLeave: Subject<string> = new Subject();
+
   private setEvents() {
     this.socket.on('connection', () => console.log('connected'));
-    this.socket.on('room connected', (data: Room) => {
+    this.socket.on('room:created', (data: Room) => {
+      console.log(data);
+
       this.room.next(data);
       if (data.turn == this.socket.id) {
         this.turn.next(true)
       }
     });
     this.socket.on('option selected', (val) => this.optionSelected.next({ value: val.value, socketId: val.socketId }))
-    this.socket.on('room leave', () => {
+    this.socket.on('room:userleft', () => {
+      console.log("room left");
+
       this.socket.disconnect();
       this.room.next(null);
+      this.roomLeave.next('user-left');
     })
     this.socket.on('game:turn', (data) => {
       console.log(data)
@@ -86,6 +93,7 @@ export class GameService {
   endGame() {
     this.socket.disconnect();
     this.room.next(null);
+    this.roomLeave.next('self-left');
   }
 
 
