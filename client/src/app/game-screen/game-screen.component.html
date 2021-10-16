@@ -1,0 +1,31 @@
+<h1>Hi {{username}}</h1>
+
+<ng-container *ngIf="room">
+
+  <p>Your opponent is {{opponent?.username}}</p>
+
+  <h1 class="text-3xl">{{option}}</h1>
+
+  <h1 *ngIf="$canMove | async">Your turn</h1>
+
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(1)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">1</button>
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(2)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">2</button>
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(3)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">3</button>
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(4)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">4</button>
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(5)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">5</button>
+  <button [disabled]="!($canMove | async)" (click)="buttonPressed(6)"
+    class="px-4 disabled:bg-gray-500 py-2 m-2 bg-blue-300 rounded-sm border-2">6</button>
+
+  <app-game-board></app-game-board>
+
+  <button (click)="endGame()">Exit</button>
+
+</ng-container>
+<ng-container *ngIf="!room">
+  <h1 class="text-3xl">Other user has left the game. Please play again : (</h1>
+</ng-container>

@@ -1,0 +1,9 @@
+<div class="h-[80%] flex flex-col justify-center items-center">
+
+  <h1 class="text-center text-4xl">Hi, enter your</h1>
+  <input class="text-4xl px-4 py-2 outline-none border-b-2" (keydown.enter)="!username.errors && selectUsername()"
+    [formControl]="username"
+    placeholder="username">
+  <p class="text-gray-400">Press enter to continue</p>
+  <p *ngIf="username.touched && username.dirty && username.errors" class="text-red-400">Username is required</p>
+</div>

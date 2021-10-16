@@ -1,0 +1,13 @@
+<h1 class="text-4xl p-4 text-gray-600">Hi {{username}}</h1>
+<div class="flex h-full p-4 justify-center items-center flex-col ">
+  <div *ngIf="!connecting">
+    <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer">Play with computer</p>
+    <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer">Join / Create Room</p>
+    <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer" (click)="startPlayerMatch()">Play with
+      random player</p>
+  </div>
+  <div *ngIf="connecting">
+    <h1 class="first-letter:text-blue-300">Finding player please wait</h1>
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+</div>
