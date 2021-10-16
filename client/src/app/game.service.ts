@@ -15,7 +15,9 @@ export interface Room {
   providedIn: 'root'
 })
 export class GameService {
-  user = sessionStorage.getItem('USERNAME') || 'NULL';
+  username = sessionStorage.getItem('USERNAME') || 'NULL';
+  session = sessionStorage.getItem('session');
+  user = 'temp'
   URL = `http://${window.location.hostname}:3000`;
 
   socket = io(this.URL, { autoConnect: false });
@@ -23,7 +25,7 @@ export class GameService {
 
   constructor(private router: Router) {
     console.log(window.location);
-    this.socket.auth = { username: this.user };
+    this.socket.auth = { username: this.username, sessionId: this.session };
     this.setEvents();
   }
 
@@ -35,18 +37,25 @@ export class GameService {
 
   gameMove: Subject<{ from: string, value: number }> = new Subject();
 
+  roomLeave: Subject<string> = new Subject();
+
   private setEvents() {
     this.socket.on('connection', () => console.log('connected'));
-    this.socket.on('room connected', (data: Room) => {
+    this.socket.on('room:created', (data: Room) => {
+      console.log(data);
+
       this.room.next(data);
       if (data.turn == this.socket.id) {
         this.turn.next(true)
       }
     });
     this.socket.on('option selected', (val) => this.optionSelected.next({ value: val.value, socketId: val.socketId }))
-    this.socket.on('room leave', () => {
+    this.socket.on('room:userleft', () => {
+      console.log("room left");
+
       this.socket.disconnect();
       this.room.next(null);
+      this.roomLeave.next('user-left');
     })
     this.socket.on('game:turn', (data) => {
       console.log(data)
@@ -62,6 +71,10 @@ export class GameService {
         this.gameMove.next({ from: 'self', value: data['value'] })
       }
     });
+    this.socket.on("session", (data: { sessionId: string, userId: string }) => {
+      console.log(data);
+      sessionStorage.setItem('session', data.sessionId);
+    })
   }
 
   joinRoom(): void {
@@ -80,6 +93,7 @@ export class GameService {
   endGame() {
     this.socket.disconnect();
     this.room.next(null);
+    this.roomLeave.next('self-left');
   }
 
 
