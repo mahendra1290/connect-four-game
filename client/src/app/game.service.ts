@@ -15,7 +15,9 @@ export interface Room {
   providedIn: 'root'
 })
 export class GameService {
-  user = sessionStorage.getItem('USERNAME') || 'NULL';
+  username = sessionStorage.getItem('USERNAME') || 'NULL';
+  session = sessionStorage.getItem('session');
+  user = 'temp'
   URL = `http://${window.location.hostname}:3000`;
 
   socket = io(this.URL, { autoConnect: false });
@@ -23,7 +25,7 @@ export class GameService {
 
   constructor(private router: Router) {
     console.log(window.location);
-    this.socket.auth = { username: this.user };
+    this.socket.auth = { username: this.username, sessionId: this.session };
     this.setEvents();
   }
 
@@ -62,6 +64,10 @@ export class GameService {
         this.gameMove.next({ from: 'self', value: data['value'] })
       }
     });
+    this.socket.on("session", (data: { sessionId: string, userId: string }) => {
+      console.log(data);
+      sessionStorage.setItem('session', data.sessionId);
+    })
   }
 
   joinRoom(): void {
