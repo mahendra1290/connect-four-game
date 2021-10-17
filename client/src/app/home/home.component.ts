@@ -16,7 +16,7 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void { }
 
   selectUsername(): void {
-    sessionStorage.setItem('USERNAME', this.username.value);
+    localStorage.setItem('USERNAME', this.username.value);
     this.router.navigateByUrl('start');
   }
 }

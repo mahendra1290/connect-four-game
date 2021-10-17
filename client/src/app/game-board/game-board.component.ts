@@ -7,20 +7,35 @@ import { GameService } from '../game.service';
   styleUrls: ['./game-board.component.css']
 })
 export class GameBoardComponent implements OnInit {
-  gameState: number[][] = [[], [], [], [], [], [], []];
+  gameState: string[][] = [[], [], [], [], [], [], []];
+
+  marker = '';
 
   constructor(private gameService: GameService) { }
 
   ngOnInit(): void {
-    this.gameService.gameMove.subscribe(move => {
-      console.log(move)
-      console.log(this.gameState)
-      if (move.from == 'opponent') {
-
-        this.gameState[move.value].push(1);
-      } else {
-        this.gameState[move.value].push(0);
+    this.gameService.room.subscribe(room => {
+      if (room) {
+        const session = localStorage.getItem('session') || '';
+        if (room.player1.userId == session) {
+          this.marker = room.player1.marker;
+        } else {
+          this.marker = room.player2.marker;
+        }
       }
+    })
+    this.gameService.gameMove.subscribe(move => {
+      console.log(move);
+
+      this.gameState = move;
+      // console.log(move)
+      // console.log(this.gameState)
+      // if (move.from == 'opponent') {
+
+      //   this.gameState[move.value].push(1);
+      // } else {
+      //   this.gameState[move.value].push(0);
+      // }
     })
   }
 

@@ -1,13 +1,30 @@
 <h1 class="text-4xl p-4 text-gray-600">Hi {{username}}</h1>
 <div class="flex h-full p-4 justify-center items-center flex-col ">
-  <div *ngIf="!connecting">
+  <div *ngIf="!connecting && !creatingRoom && !joiningRoom">
     <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer">Play with computer</p>
-    <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer">Join / Create Room</p>
     <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer" (click)="startPlayerMatch()">Play with
       random player</p>
+    <p class="text-xl px-4 py-2 m-4 hover:bg-blue-300 rounded-sm cursor-pointer" (click)="requestCreateRoom()">Create
+      Room</p>
+    <div>
+      <input #roomCodeInput class="text-xl px-4 py-2 border-2 outline-none" placeholder="Room Code">
+      <button class="bg-blue-300 border-2 text-xl px-4 py-2" (click)="joinRoom(roomCodeInput.value)">Join room</button>
+    </div>
   </div>
   <div *ngIf="connecting">
     <h1 class="first-letter:text-blue-300">Finding player please wait</h1>
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+  <div *ngIf="creatingRoom">
+    <h1 class="first-letter:text-blue-300">Creating room please wait...</h1>
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+  <div *ngIf="roomCode">
+    <h1 class="text-2xl text-center px-4 py-2 border-2 border-blue-500">{{roomCode}}</h1>
+    <p>Share the above code with your friend</p>
+  </div>
+  <div *ngIf="joiningRoom">
+    <p>Finding room...</p>
     <app-loading-spinner></app-loading-spinner>
   </div>
 </div>

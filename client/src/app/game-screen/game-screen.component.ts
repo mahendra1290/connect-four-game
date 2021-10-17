@@ -8,7 +8,7 @@ import { GameService, Room } from '../game.service';
   styleUrls: ['./game-screen.component.css']
 })
 export class GameScreenComponent implements OnInit {
-  username = sessionStorage.getItem('USERNAME') || '';
+  username = localStorage.getItem('USERNAME') || '';
   constructor(private gameService: GameService, private router: Router) { }
 
   room?: Room | null = null;

@@ -4,7 +4,7 @@
     <div class="flex absolute bottom-0 gap-2">
       <div class="flex w-24 gap-2 flex-col-reverse justify-start" *ngFor="let col of gameState">
         <p class="w-24 h-24 bg-red-400 rounded-full bg-gradient-to-bl"
-          [ngClass]="val == 1 ? 'from-red-500 to-red-200' : 'from-green-500 to-green-200'"
+          [ngClass]="val != marker ? 'from-red-500 to-red-200' : 'from-green-500 to-green-200'"
           *ngFor="let val of col"></p>
       </div>
     </div>
