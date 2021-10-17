@@ -7,6 +7,21 @@ export interface Player {
   userId: string,
 }
 
+export interface Room {
+  roomId: string,
+  player1: {
+    userId: string,
+    username: string,
+    marker: string,
+  },
+  player2: {
+    userId: string,
+    username: string,
+    marker: string,
+  }
+  firstToStart: string,
+}
+
 export class RoomManager {
 
   ROOM_TTL = 60 * 10;
@@ -14,6 +29,8 @@ export class RoomManager {
   constructor(private redisClient: Redis) { }
 
   async addPlayer(sessionId: string) {
+    console.log(sessionId, "Add  ");
+
     const isPresent = await this.redisClient.sismember("players", sessionId);
     if (!isPresent) {
       this.redisClient.sadd("players", sessionId);
@@ -43,7 +60,7 @@ export class RoomManager {
         const [_, fields] = await this.redisClient.hscan(room, 0)
         console.log(fields);
 
-        if (fields[0] == sessionId || fields[1] == sessionId) {
+        if (fields[1] == sessionId || fields[3] == sessionId) {
           return { roomId: room.split(':')[1], player1: fields[1], player2: fields[3] };
         }
       }
@@ -52,12 +69,68 @@ export class RoomManager {
 
   }
 
+  async deleteRoom(sessionId: string): Promise<any> {
+    console.log(sessionId);
+    const keys = new Set<string>();
+    let cursor = 0;
+    do {
+      const [nextCursor, rooms] = await this.redisClient.scan(cursor, "MATCH", 'rooms:*', "COUNT", 100);
+      for (let room of rooms) {
+        const [_, fields] = await this.redisClient.hscan(room, 0)
+        console.log(fields);
+
+        if (fields[1] == sessionId || fields[3] == sessionId) {
+          keys.add(room);
+        }
+      }
+      cursor = +nextCursor;
+    } while (cursor != 0);
+    console.log('rooms ', keys);
+    const commands = []
+    for (const key of keys) {
+      commands.push(["hdel", key, "player1", "player2", "roomCode"])
+    }
+    return this.redisClient.multi(
+      commands
+    ).exec()
+  }
+
 
   async removePlayer(sessionId: string) {
-    console.log(sessionId);
 
     this.redisClient.srem("players", sessionId);
     this.redisClient.lrem("waitingQueue", 0, sessionId);
+  }
+
+  createRoom(sessionId: string): string {
+    const roomId = nanoid(8);
+    const roomCode = (Math.random() * 1e6).toFixed();
+    this.redisClient
+      .multi()
+      .hmset(`rooms:${roomId}`, "roomCode", roomCode, "player1", sessionId)
+      .expire(`rooms:${roomId}`, this.ROOM_TTL)
+      .exec();
+    return roomCode;
+  }
+
+  async joinRoom(sessionId: string, roomCode: string) {
+    let cursor = 0;
+    do {
+      const [nextCursor, rooms] = await this.redisClient.scan(cursor, "MATCH", 'rooms:*', "COUNT", 100);
+      for (let room of rooms) {
+        const [_, fields] = await this.redisClient.hscan(room, 0)
+        console.log(fields);
+
+        if (fields[1] == roomCode) {
+          console.log("room ", room);
+          await this.redisClient.hmset(`rooms:${room}`, "player2", sessionId);
+          this.redisClient.emit("room:created", { roomId: room, player1: fields[3], player2: sessionId });
+          return;
+          // return { roomId: room.split(':')[1], player1: fields[1], player2: fields[3] };
+        }
+      }
+      cursor = +nextCursor;
+    } while (cursor != 0);
   }
 
 }
